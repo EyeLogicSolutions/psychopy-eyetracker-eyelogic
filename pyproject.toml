@@ -23,7 +23,8 @@ classifiers = [
 
 dependencies = [
     "eyelogic-sdk",
-    "eyelogic-sdk"
+    "screeninfo",
+]
 
 [project.optional-dependencies]
 # dependencies for building the docs
