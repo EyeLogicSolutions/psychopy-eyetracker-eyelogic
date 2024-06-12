@@ -47,6 +47,3 @@ where = ["", "psychopy_eyetracker_eyelogic",]
 
 [project.entry-points."psychopy.iohub.devices.eyetracker"]
 EyeTracker = "psychopy_eyetracker_eyelogic.eyelogic.eyetracker:EyeTracker"
-
-[project.entry-points."psychopy.iohub.devices"]
-EyeTracker = "psychopy_eyetracker_eyelogic.eyelogic.eyetracker:EyeTracker"
