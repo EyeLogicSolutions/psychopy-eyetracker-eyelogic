@@ -1,4 +1,4 @@
-eyetracker.hw.eyelogic.EyeTracker:
+eyetracker.EyeTracker:
     name: tracker
     enable: IOHUB_BOOL
     model_name:
