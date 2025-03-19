@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "psychopy-eyetracker-eyelogic"
-version = "1.1.13"
+version = "1.1.14"
 description = "extension package for PsychoPy which adds support for EyeLogic eyetrackers to ioHub"
 readme = "README.md"
 requires-python = ">= 3.7"
@@ -36,3 +36,6 @@ include = ["psychopy_eyetracker_eyelogic*"]
 
 [project.entry-points."psychopy.iohub.devices.eyetracker"]
 eyelogic = "psychopy_eyetracker_eyelogic.eyelogic"
+
+[project.entry-points."psychopy.experiment.components.settings.eyetracking"]
+EyeLogicEyetrackerBackend = "psychopy_eyetracker_eyelogic.eyelogic.psychopy.settings.EyeLogicEyetrackerBackend"
