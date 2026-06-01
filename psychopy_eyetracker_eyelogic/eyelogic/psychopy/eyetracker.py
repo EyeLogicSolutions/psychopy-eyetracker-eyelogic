@@ -1,5 +1,5 @@
 # -----------------------------------------------------------------------
-# Copyright (C) 2019-2024, EyeLogic GmbH
+# Copyright (C) 2019-2026, EyeLogic GmbH
 #
 # Permission is hereby granted, free of charge, to any person or
 # organization obtaining a copy of the software and accompanying
@@ -112,7 +112,7 @@ class EyeTracker(EyeTrackerDevice):
         '_INVALID_VALUE'
     ]
 
-    _event_callback: EventCallback | None
+    _event_callback: DeviceEventCallback | None
     _sample_callback: GazeSampleCallback | None
     _is_recording: bool
     _tracker_below: float | None
@@ -126,7 +126,7 @@ class EyeTracker(EyeTrackerDevice):
         self._timestamp_anchor = None
 
         self._elapi = ELApi('psychopy client')
-        self._elapi.registerEventCallback(self._getEventCallback())
+        self._elapi.registerDeviceEventCallback(self._getDeviceEventCallback())
         self._elapi.registerGazeSampleCallback(self._getSampleCallback())
         self._elapi.connect()
         self._is_recording = False
@@ -143,27 +143,27 @@ class EyeTracker(EyeTrackerDevice):
             self._sample_callback = GazeSampleCallback(sampleCallback)
         return self._sample_callback
 
-    def _getEventCallback(self):
-        @EventCallback
-        def eventCallback(event: ELEvent):
-            if ELEvent(event) == ELEvent.DEVICE_CONNECTED:
+    def _getDeviceEventCallback(self):
+        @DeviceEventCallback
+        def deviceEventCallback(event: ELDeviceEvent):
+            if ELDeviceEvent(event) == ELDeviceEvent.DEVICE_CONNECTED:
                 logging.info("EyeLogic device connected.")
-            elif ELEvent(event) == ELEvent.CONNECTION_CLOSED:
+            elif ELDeviceEvent(event) == ELDeviceEvent.CONNECTION_CLOSED:
                 logging.warning("Connection to EyeLogic device closed remotely.")
                 self.setRecordingState(False)
                 self.setConnectionState(False)
-            elif ELEvent(event) == ELEvent.SCREEN_CHANGED:
+            elif ELDeviceEvent(event) == ELDeviceEvent.SCREEN_CHANGED:
                 logging.warning("EyeLogic device setup changed remotely.")
                 self.setRecordingState(False)
-            elif ELEvent(event) == ELEvent.DEVICE_DISCONNECTED:
+            elif ELDeviceEvent(event) == ELDeviceEvent.DEVICE_DISCONNECTED:
                 logging.warning("EyeLogic device disconnected.")
                 self.setRecordingState(False)
-            elif ELEvent(event) == ELEvent.TRACKING_STOPPED:
+            elif ELDeviceEvent(event) == ELDeviceEvent.TRACKING_STOPPED:
                 logging.warning("EyeLogic device stopped remotely.")
                 self.setRecordingState(False)
 
         if self._event_callback is None:
-            self._event_callback = EventCallback(eventCallback)
+            self._event_callback = DeviceEventCallback(deviceEventCallback)
 
         return self._event_callback
 
@@ -269,7 +269,7 @@ class EyeTracker(EyeTrackerDevice):
             EyeTrackerConstants.UNDEFINED,  # left_angle_y, 'f4'
             EyeTrackerConstants.UNDEFINED,  # left_raw_x, 'f4'
             EyeTrackerConstants.UNDEFINED,  # left_raw_y, 'f4'
-            sample_radius_left,  # left_pupil_measure1, 'f4'
+            2 * sample_radius_left,  # left_pupil_measure1, 'f4'
             EyeTrackerConstants.PUPIL_DIAMETER_MM,  # left_pupil_measure1_type, 'u1'
             EyeTrackerConstants.UNDEFINED,  # left_pupil_measure2, 'f4'
             EyeTrackerConstants.UNDEFINED,  # left_pupil_measure2_type, 'u1'
@@ -288,7 +288,7 @@ class EyeTracker(EyeTrackerDevice):
             EyeTrackerConstants.UNDEFINED,  # right_angle_y, 'f4'
             EyeTrackerConstants.UNDEFINED,  # right_raw_x, 'f4'
             EyeTrackerConstants.UNDEFINED,  # right_raw_y, 'f4'
-            sample_radius_right,  # right_pupil_measure1, 'f4'
+            2 * sample_radius_right,  # right_pupil_measure1, 'f4'
             EyeTrackerConstants.PUPIL_DIAMETER_MM,  # right_pupil_measure1_type, 'u1'
             EyeTrackerConstants.UNDEFINED,  # right_pupil_measure2, 'f4'
             EyeTrackerConstants.UNDEFINED,  # right_pupil_measure2_type, 'u1'
@@ -421,7 +421,7 @@ class EyeTracker(EyeTrackerDevice):
         """
         return EyeTrackerConstants.INTERFACE_METHOD_NOT_SUPPORTED
 
-    def runSetupProcedure(self, calibration_args={}):
+    def runSetupProcedure(self, calibration_args=None):
         """
         The runSetupProcedure method starts the eye tracker calibration
         routine.
@@ -453,6 +453,7 @@ class EyeTracker(EyeTrackerDevice):
             if not self._is_recording:
                 return False
 
+            calibration_args = self._normaliseCalibrationArgs(calibration_args)
             genv = EyeLogicCalibrationProcedure(self, calibration_args)
             genv.runCalibration()
             if turn_off_after:
@@ -703,8 +704,18 @@ class EyeTracker(EyeTrackerDevice):
         return None
 
     @staticmethod
+    def _normaliseCalibrationArgs(calibration_args):
+        """Return calibration args accepted by PsychoPy's BaseCalibrationProcedure."""
+        if calibration_args is None:
+            calibration_args = {}
+        else:
+            calibration_args = dict(calibration_args)
+        calibration_args.setdefault('target_attributes', {})
+        return calibration_args
+
+    @staticmethod
     def getCalibrationDict(calib):
-        return {'type': calib.targetLayout}
+        return EyeTracker._normaliseCalibrationArgs({'type': calib.targetLayout})
 
     def __del__(self):
         """Do any final cleanup of the eye tracker before the object is

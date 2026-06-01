@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # -----------------------------------------------------------------------
-# Copyright (C) 2019-2024, EyeLogic GmbH
+# Copyright (C) 2019-2026, EyeLogic GmbH
 #
 # Permission is hereby granted, free of charge, to any person or
 # organization obtaining a copy of the software and accompanying
@@ -21,4 +21,4 @@
 # -----------------------------------------------------------------------
 
 __author__ = "EyeLogic GmbH"
-__version__ = "1.1.13"
+__version__ = "1.2.4"
